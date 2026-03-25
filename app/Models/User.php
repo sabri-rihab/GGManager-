@@ -41,17 +41,17 @@ class User extends Authenticatable
 
     public function matchesAsPlayer1()
     {
-        return $this->hasMany(Match::class, 'player1_id');
+        return $this->hasMany(MatchGame::class, 'player1_id');
     }
 
     public function matchesAsPlayer2()
     {
-        return $this->hasMany(Match::class, 'player2_id');
+        return $this->hasMany(MatchGame::class, 'player2_id');
     }
 
     public function wonMatches()
     {
-        return $this->hasMany(Match::class, 'winner_id');
+        return $this->hasMany(MatchGame::class, 'winner_id');
     }
 
     public function isOrganizer()

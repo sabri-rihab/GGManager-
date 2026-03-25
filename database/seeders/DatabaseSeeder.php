@@ -1,11 +1,10 @@
-// database/seeders/DatabaseSeeder.php
 <?php
 
 namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Tournament;
-use App\Models\Match;
+use App\Models\MatchGame;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -55,7 +54,7 @@ class DatabaseSeeder extends Seeder
         // Quarter finals (round 1)
         $matches = [];
         for ($i = 0; $i < 8; $i += 2) {
-            $match = Match::create([
+            $match = MatchGame::create([
                 'tournament_id' => $tournament->id,
                 'player1_id' => $players[$i]->id,
                 'player2_id' => $players[$i+1]->id,
@@ -69,7 +68,7 @@ class DatabaseSeeder extends Seeder
         // Semi finals (round 2)
         $semiMatches = [];
         for ($i = 0; $i < 4; $i += 2) {
-            $semiMatch = Match::create([
+            $semiMatch = MatchGame::create([
                 'tournament_id' => $tournament->id,
                 'round' => 2,
                 'position' => $i/2,
@@ -85,7 +84,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // Final (round 3)
-        $finalMatch = Match::create([
+        $finalMatch =MatchGame::create([
             'tournament_id' => $tournament->id,
             'round' => 3,
             'position' => 0,

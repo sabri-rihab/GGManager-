@@ -95,7 +95,5 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/search/tournaments', [TournamentController::class, 'search']);
     Route::get('/search/players', [TournamentController::class, 'searchPlayers']);
     
-    // ========== NOTIFICATIONS (optionnel) ==========
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::put('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    
 });

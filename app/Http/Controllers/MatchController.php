@@ -10,9 +10,16 @@ class MatchController extends Controller
 {
     public function updateScore(Request $request, Tournament $tournament, MatchGame $match)
     {
+        // Vérifier que l'utilisateur est authentifié via le token
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+        
         // Verify user is tournament organizer
-        if ($tournament->organizer_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if ($tournament->organizer_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized - Only the organizer can update scores'], 403);
         }
         
         // Verify match belongs to tournament

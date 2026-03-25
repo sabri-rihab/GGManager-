@@ -1,5 +1,5 @@
-// config/broadcasting.php
 'connections' => [
+
     'pusher' => [
         'driver' => 'pusher',
         'key' => env('PUSHER_APP_KEY'),
@@ -13,8 +13,7 @@
             'encrypted' => true,
             'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
         ],
-        'client_options' => [
-            // Guzzle client options
-        ],
+        'client_options' => [],
     ],
+
 ],

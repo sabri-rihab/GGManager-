@@ -12,14 +12,20 @@ class ParticipantController extends Controller
         return response()->json($tournament->participants()->paginate(20));
     }
     
-    public function destroy(Tournament $tournament, $userId)
+    public function destroy(Request $request, Tournament $tournament, $userId)
     {
-        if (auth()->id() !== $tournament->organizer_id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+        
+        if ($user->id !== $tournament->organizer_id) {
+            return response()->json(['message' => 'Unauthorized - Only the organizer can remove participants'], 403);
         }
         
         $tournament->participants()->detach($userId);
         
-        return response()->json(['message' => 'Participant removed']);
+        return response()->json(['message' => 'Participant removed successfully']);
     }
 }

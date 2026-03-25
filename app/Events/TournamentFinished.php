@@ -12,16 +12,40 @@ use Illuminate\Queue\SerializesModels;
 class TournamentFinished implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
+    
     public $tournament;
-
+    
     public function __construct(Tournament $tournament)
     {
-        $this->tournament = $tournament;
+        $this->tournament = $tournament->load('organizer');
     }
-
+    
     public function broadcastOn()
     {
         return new Channel('tournament.' . $this->tournament->id);
+    }
+    
+    public function broadcastAs()
+    {
+        return 'tournament.finished';
+    }
+    
+    public function broadcastWith()
+    {
+        // Get champion
+        $maxRound = $this->tournament->matches()->max('round');
+        $finalMatch = $this->tournament->matches()
+            ->where('round', $maxRound)
+            ->first();
+        
+        return [
+            'tournament_id' => $this->tournament->id,
+            'tournament_name' => $this->tournament->name,
+            'champion' => $finalMatch?->winner ? [
+                'id' => $finalMatch->winner->id,
+                'name' => $finalMatch->winner->name
+            ] : null,
+            'status' => 'finish'
+        ];
     }
 }

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Events\MatchUpdated; 
+use App\Events\TournamentFinished;
 
 class MatchGame extends Model
 {

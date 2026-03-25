@@ -35,7 +35,7 @@ class Tournament extends Model
 
     public function matches()
     {
-        return $this->hasMany(Match::class);
+        return $this->hasMany(MatchGame::class);
     }
 
     public function canRegister()

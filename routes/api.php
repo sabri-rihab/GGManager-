@@ -4,25 +4,98 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\BracketController;
+use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\DashboardController;
 
-// Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
 
-// Protected routes
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+// ==================== PUBLIC ROUTES ====================
+Route::prefix('v1')->group(function () {
+    
+    // Authentication
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    
+    // Public tournament endpoints
+    Route::get('/tournaments', [TournamentController::class, 'index']);
+    Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
+    Route::get('/tournaments/{tournament}/bracket', [BracketController::class, 'show']); // Public bracket viewing
+    Route::get('/tournaments/{tournament}/matches', [MatchController::class, 'index']); // Public matches viewing
+    
+    // Games list (optionnel)
+    Route::get('/games', [TournamentController::class, 'games']);
+    Route::get('/stats', [TournamentController::class, 'globalStats']);
+});
+
+// ==================== PROTECTED ROUTES ====================
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    
+    // User profile
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
     
-    // Tournament routes
-    Route::apiResource('tournaments', TournamentController::class);
-    Route::post('/tournaments/{tournament}/register', [TournamentController::class, 'register']);
+    // ========== TOURNAMENT MANAGEMENT ==========
+    // Organizer only
+    Route::post('/tournaments', [TournamentController::class, 'store'])
+        ->middleware('role:organizer');
+    
+    Route::put('/tournaments/{tournament}', [TournamentController::class, 'update'])
+        ->middleware('role:organizer');
+    
+    Route::delete('/tournaments/{tournament}', [TournamentController::class, 'destroy'])
+        ->middleware('role:organizer');
+    
+    Route::post('/tournaments/{tournament}/close-registrations', [TournamentController::class, 'closeRegistrations'])
+        ->middleware('role:organizer');
+    
+    // ========== PARTICIPATION ==========
+    // Player only
+    Route::post('/tournaments/{tournament}/register', [TournamentController::class, 'register'])
+        ->middleware('role:player');
+    
+    Route::delete('/tournaments/{tournament}/unregister', [TournamentController::class, 'unregister'])
+        ->middleware('role:player');
+    
     Route::get('/tournaments/{tournament}/participants', [TournamentController::class, 'participants']);
-    Route::post('/tournaments/{tournament}/close-registrations', [TournamentController::class, 'closeRegistrations']);
-    Route::get('/tournaments/{tournament}/bracket', [TournamentController::class, 'bracket']);
     
-    // Match routes
-    Route::get('/tournaments/{tournament}/matches', [MatchController::class, 'index']);
+    // ========== MATCH MANAGEMENT ==========
+    // Organizer only - Update scores
+    Route::put('/tournaments/{tournament}/matches/{match}/score', [ScoreController::class, 'update'])
+        ->middleware('role:organizer');
+    
+    // Public match viewing
     Route::get('/tournaments/{tournament}/matches/{match}', [MatchController::class, 'show']);
-    Route::put('/tournaments/{tournament}/matches/{match}/score', [MatchController::class, 'updateScore']);
+    
+    // ========== BRACKET ==========
+    Route::get('/tournaments/{tournament}/bracket/full', [BracketController::class, 'full']);
+    Route::get('/tournaments/{tournament}/bracket/simple', [BracketController::class, 'simple']);
+    
+    // ========== USER DASHBOARD ==========
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/my-matches', [MatchController::class, 'myMatches']);
+    Route::get('/my-tournaments', [TournamentController::class, 'myTournaments']);
+    Route::get('/my-participations', [TournamentController::class, 'myParticipations']);
+    
+    // ========== ADMIN / ORGANIZER DASHBOARD ==========
+    Route::middleware('role:organizer')->prefix('organizer')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'organizerDashboard']);
+        Route::get('/tournaments', [TournamentController::class, 'organizerTournaments']);
+        Route::get('/stats', [TournamentController::class, 'organizerStats']);
+        Route::get('/matches/pending', [MatchController::class, 'pendingMatches']);
+    });
+    
+    // ========== SEARCH & FILTERS ==========
+    Route::get('/search/tournaments', [TournamentController::class, 'search']);
+    Route::get('/search/players', [TournamentController::class, 'searchPlayers']);
+    
+    // ========== NOTIFICATIONS (optionnel) ==========
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::put('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
 });

@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +20,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                // Pour API, retourner une réponse JSON au lieu de rediriger
+                // Pour API, retourner une réponse JSON
                 if ($request->expectsJson()) {
                     return response()->json([
                         'message' => 'Already authenticated',
@@ -29,7 +28,8 @@ class RedirectIfAuthenticated
                     ], 200);
                 }
                 
-                return redirect(RouteServiceProvider::HOME);
+                // Pour web, rediriger vers la page d'accueil ou dashboard
+                return redirect('/'); // ou redirect('/dashboard')
             }
         }
 

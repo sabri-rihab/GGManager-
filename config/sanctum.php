@@ -1,4 +1,3 @@
-// config/sanctum.php
 <?php
 
 return [

@@ -1,58 +1,188 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🎮 GGManager - Plateforme de Tournois E-Sport
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 📋 Description
 
-## About Laravel
+GGManager est une plateforme backend de gestion de tournois e-sport permettant aux organisateurs de créer et gérer des tournois, aux joueurs de s'inscrire, et aux spectateurs de suivre l'évolution des matchs en temps réel.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fonctionnalités
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 👤 Authentification et Rôles
+- Inscription / Connexion via Laravel Sanctum (tokens)
+- Trois rôles : **Organisateur**, **Joueur**, **Spectateur**
+- Gestion des permissions par rôle
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 🏆 Gestion des Tournois (Organisateur)
+- Créer un tournoi (nom, jeu, saison, nombre max de participants)
+- Modifier / Supprimer un tournoi (si aucun match n'a commencé)
+- Voir la liste des tournois avec filtres (par jeu, statut)
 
-## Learning Laravel
+### 📝 Inscriptions (Joueur)
+- Un joueur peut s'inscrire à un tournoi ouvert
+- L'organisateur peut voir la liste des inscrits
+- Clôture des inscriptions avec génération automatique du bracket
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 🎲 Génération du Bracket (Single Elimination)
+- Algorithme de bracket en single elimination
+- Gestion automatique des BYE (nombre de participants non puissance de 2)
+- Génération asynchrone via Job Laravel
+- Structure arborescente exposée via API
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### ⚽ Gestion des Matchs (Organisateur)
+- Saisie des scores (ex: 3-1)
+- Validation automatique (scores cohérents, pas d'égalité)
+- Qualification automatique du vainqueur au tour suivant
+- Événement broadcasté en temps réel
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 📡 Temps Réel (WebSockets)
+- Mises à jour en direct via Pusher
+- Canal public par tournoi (ex: tournament.1)
+- Affichage automatique des scores pour tous les clients connectés
 
-## Agentic Development
+### 📊 Dashboard
+- **Joueur** : Mes matchs, mes participations, statistiques
+- **Organisateur** : Mes tournois, statistiques, matchs en attente
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## 🛠️ Technologies Utilisées
+
+| Technologie | Version | Utilisation |
+|-------------|---------|-------------|
+| Laravel | 13.x | Framework PHP |
+| PHP | 8.3 | Langage backend |
+| MySQL | 8.0 | Base de données |
+| Laravel Sanctum | - | Authentification API |
+| Pusher | - | WebSockets temps réel |
+| Postman | - | Tests API |
+
+## 📁 Structure du Projet
+GGManager/
+├── app/
+│ ├── Http/
+│ │ ├── Controllers/
+│ │ │ ├── AuthController.php
+│ │ │ ├── TournamentController.php
+│ │ │ ├── MatchController.php
+│ │ │ ├── BracketController.php
+│ │ │ └── ScoreController.php
+│ │ └── Middleware/
+│ │ └── CheckRole.php
+│ ├── Models/
+│ │ ├── User.php
+│ │ ├── Tournament.php
+│ │ └── MatchGame.php
+│ ├── Services/
+│ │ └── BracketGenerator.php
+│ └── Jobs/
+│ └── GenerateBracketJob.php
+├── database/
+│ ├── migrations/
+│ └── seeders/
+├── routes/
+│ └── api.php
+├── public/
+│ └── test-real-time.html
+└── .env
+
+
+## 🚀 Installation
+
+### Prérequis
+- PHP 8.3+
+- Composer
+- MySQL 8.0+
+- Node.js (optionnel)
+
+### Étapes d'installation
 
 ```bash
-composer require laravel/boost --dev
+# 1. Cloner le projet
+git clone https://github.com/votre-repo/GGManager.git
+cd GGManager
 
-php artisan boost:install
-```
+# 2. Installer les dépendances
+composer install
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+# 3. Copier le fichier d'environnement
+cp .env.example .env
 
-## Contributing
+# 4. Configurer la base de données dans .env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ggmanager
+DB_USERNAME=root
+DB_PASSWORD=
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 5. Générer la clé
+php artisan key:generate
 
-## Code of Conduct
+# 6. Exécuter les migrations
+php artisan migrate
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 7. Exécuter les seeders
+php artisan db:seed
 
-## Security Vulnerabilities
+# 8. Démarrer le serveur
+php artisan serve
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-## License
+### Configuration Pusher (WebSockets)
+BROADCAST_DRIVER=pusher
+PUSHER_APP_ID=your_app_id
+PUSHER_APP_KEY=your_app_key
+PUSHER_APP_SECRET=your_app_secret
+PUSHER_APP_CLUSTER=mt1
+QUEUE_CONNECTION=sync
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Documentation API
+ Authentification
+Méthode	Endpoint	Description
+POST	/api/v1/register	Inscription
+POST	/api/v1/login	Connexion
+POST	/api/v1/logout	Déconnexion
+GET	/api/v1/me	Utilisateur courant
+Tournois
+Méthode	Endpoint	Description	Rôle
+GET	/api/v1/tournaments	Liste des tournois	Public
+POST	/api/v1/tournaments	Créer un tournoi	Organisateur
+GET	/api/v1/tournaments/{id}	Détails tournoi	Public
+PUT	/api/v1/tournaments/{id}	Modifier tournoi	Organisateur
+DELETE	/api/v1/tournaments/{id}	Supprimer tournoi	Organisateur
+Inscriptions
+Méthode	Endpoint	Description	Rôle
+POST	/api/v1/tournaments/{id}/register	S'inscrire	Joueur
+GET	/api/v1/tournaments/{id}/participants	Liste participants	Organisateur
+POST	/api/v1/tournaments/{id}/close-registrations	Fermer inscriptions	Organisateur
+Matchs
+Méthode	Endpoint	Description	Rôle
+GET	/api/v1/tournaments/{id}/matches	Liste des matchs	Public
+GET	/api/v1/tournaments/{id}/matches/{mid}	Détails match	Public
+PUT	/api/v1/tournaments/{id}/matches/{mid}/score	Modifier score	Organisateur
+GET	/api/v1/tournaments/{id}/bracket	Voir bracket	Public
+Dashboard
+Méthode	Endpoint	Description	Rôle
+GET	/api/v1/my-tournaments	Mes tournois	Bearer
+GET	/api/v1/my-matches	Mes matchs	Bearer
+GET	/api/v1/my-participations	Mes participations	Bearer
+GET	/api/v1/dashboard	Dashboard	Bearer
+
+### 🧪 Tests
+Tests avec Postman
+Importer la collection Postman
+
+Configurer les variables d'environnement
+
+Exécuter les tests dans l'ordre
+
+👥 Équipe
+Développeur Backend : [Votre Nom]
+
+📅 Version
+Version : 1.0.0
+
+Date : Mars 2026
+
+📝 Licence
+Ce projet est développé dans le cadre d'un projet de soutenance.
+
+
+GGManager - Gérez vos tournois e-sport comme un pro ! 🎮🏆

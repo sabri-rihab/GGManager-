@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tournament Live Updates - GGManager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 20px; text-align: center; }
+        .status { background: #28a745; color: white; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
+        .bracket { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+        .round { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-width: 250px; }
+        .round h2 { text-align: center; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
+        .match { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; margin-bottom: 15px; }
+        .match.completed { background: #e8f5e9; border-color: #4caf50; }
+        .players { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .player { flex: 1; text-align: center; padding: 5px; }
+        .player.winner { font-weight: bold; color: #28a745; }
+        .score { font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .vs { padding: 0 10px; font-weight: bold; color: #666; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px; }
+        .status-badge.completed { background: #28a745; color: white; }
+        .status-badge.pending { background: #ffc107; color: #333; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .refresh { text-align: center; margin-bottom: 20px; }
+        button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .auto-refresh { background: #28a745; margin-left: 10px; }
+        .auto-refresh.active { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> GGManager - Live Tournament Updates</h1>
+        
+        <div class="refresh">
+            <button onclick="refreshBracket()"> Refresh Now</button>
+            <button id="autoBtn" class="auto-refresh active" onclick="toggleAutoRefresh()">⏸ Stop Auto-Refresh</button>
+            <span style="margin-left: 10px;">Tournament ID: <input type="number" id="tournamentId" value="2" style="width: 60px;"></span>
+        </div>
+        
+        <div id="status" class="status"> Connected - Auto-refresh every 3 seconds</div>
+        <div id="bracket" class="bracket">Loading...</div>
+        <div class="footer">Last update: <span id="lastUpdate">-</span></div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let isAutoRefreshing = true;
+        
+        function toggleAutoRefresh() {
+            isAutoRefreshing = !isAutoRefreshing;
+            const btn = document.getElementById('autoBtn');
+            
+            if (isAutoRefreshing) {
+                startAutoRefresh();
+                btn.textContent = '⏸ Stop Auto-Refresh';
+                btn.classList.add('active');
+                document.getElementById('status').innerHTML = ' Auto-refresh active - Updates every 3 seconds';
+            } else {
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                btn.textContent = '▶ Start Auto-Refresh';
+                btn.classList.remove('active');
+                document.getElementById('status').innerHTML = '⏸ Auto-refresh stopped - Click refresh manually';
+            }
+        }
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(refreshBracket, 3000);
+        }
+        
+        async function refreshBracket() {
+            const tournamentId = document.getElementById('tournamentId').value;
+            
+            try {
+                const response = await fetch(`/api/v1/tournaments/${tournamentId}/bracket`);
+                const data = await response.json();
+                
+                if (data.bracket) {
+                    displayBracket(data);
+                    document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('status').innerHTML = ' Error loading data';
+            }
+        }
+        
+        function displayBracket(data) {
+            const bracketDiv = document.getElementById('bracket');
+            const rounds = data.bracket;
+            const roundsCount = Object.keys(rounds).length;
+            
+            if (roundsCount === 0) {
+                bracketDiv.innerHTML = '<div class="round" style="width:100%;text-align:center;">No matches yet. Close registrations first.</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            for (let round in rounds) {
+                let roundName = '';
+                const totalMatches = rounds[round].length;
+                
+                if (round == 1) roundName = `Round 1 - Quarter Finals (${totalMatches} matches)`;
+                else if (round == 2) roundName = `Round 2 - Semi Finals (${totalMatches} matches)`;
+                else if (round == 3) roundName = ` Round 3 - FINAL (${totalMatches} match)`;
+                else roundName = ` Round ${round} (${totalMatches} matches)`;
+                
+                html += `<div class="round"><h2>${roundName}</h2>`;
+                
+                for (let match of rounds[round]) {
+                    const isCompleted = match.is_completed;
+                    const winnerName = match.winner ? match.winner.name : '';
+                    const player1Name = match.player1 ? match.player1.name : 'BYE';
+                    const player2Name = match.player2 ? match.player2.name : 'BYE';
+                    const score1 = match.score_p1 !== null ? match.score_p1 : '-';
+                    const score2 = match.score_p2 !== null ? match.score_p2 : '-';
+                    
+                    let player1Class = (match.winner && match.winner.id === match.player1?.id) ? 'winner' : '';
+                    let player2Class = (match.winner && match.winner.id === match.player2?.id) ? 'winner' : '';
+                    
+                    html += `
+                        <div class="match ${isCompleted ? 'completed' : ''}">
+                            <div class="players">
+                                <div class="player ${player1Class}">
+                                    <strong>${player1Name}</strong>
+                                    <div class="score">${score1}</div>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div class="player ${player2Class}">
+                                    <strong>${player2Name}</strong>
+                                    <div class="score">${score2}</div>
+                                </div>
+                            </div>
+                            <div style="text-align:center">
+                                ${isCompleted ? `<span class="status-badge completed"> Winner: ${winnerName}</span>` : '<span class="status-badge pending">Pending</span>'}
+                            </div>
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            }
+            
+            bracketDiv.innerHTML = html;
+            
+            if (data.tournament.status === 'finish') {
+                document.getElementById('status').innerHTML = ' TOURNAMENT FINISHED! ';
+                document.getElementById('status').style.background = '#dc3545';
+            } else if (data.tournament.status === 'close') {
+                document.getElementById('status').innerHTML = 'Tournament in progress - Bracket generated';
+                document.getElementById('status').style.background = '#28a745';
+            }
+        }
+        
+      
+        startAutoRefresh();
+    </script>
+</body>
+</html>

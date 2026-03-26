@@ -9,12 +9,12 @@ class BracketController extends Controller
 {
     public function show(Tournament $tournament)
     {
-        // Get all matches with their relationships
+    
         $matches = $tournament->matches()
             ->with(['player1', 'player2', 'winner', 'nextMatch'])
             ->get();
         
-        // Build bracket structure
+      
         $bracket = $this->buildBracketStructure($matches);
         
         return response()->json([
@@ -28,8 +28,7 @@ class BracketController extends Controller
     private function buildBracketStructure($matches)
     {
         $bracket = [];
-        
-        // Group matches by round
+      
         $groupedMatches = $matches->groupBy('round');
         
         foreach ($groupedMatches as $round => $roundMatches) {

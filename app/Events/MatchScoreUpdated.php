@@ -12,24 +12,24 @@ use Illuminate\Queue\SerializesModels;
 class MatchScoreUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-    
+
     public $match;
-    
+
     public function __construct(MatchGame $match)
     {
         $this->match = $match->load(['player1', 'player2', 'winner']);
     }
-    
+
     public function broadcastOn()
     {
         return new Channel('tournament.' . $this->match->tournament_id);
     }
-    
+
     public function broadcastAs()
     {
         return 'match.score.updated';
     }
-    
+
     public function broadcastWith()
     {
         return [
@@ -50,8 +50,7 @@ class MatchScoreUpdated implements ShouldBroadcast
             'winner' => [
                 'id' => $this->match->winner?->id,
                 'name' => $this->match->winner?->name
-            ],
-            'is_completed' => !is_null($this->match->winner_id)
+            ]
         ];
     }
 }

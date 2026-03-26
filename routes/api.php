@@ -25,12 +25,8 @@ Route::prefix('v1')->group(function () {
     // Public tournament endpoints
     Route::get('/tournaments', [TournamentController::class, 'index']);
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
-    Route::get('/tournaments/{tournament}/bracket', [BracketController::class, 'show']); // Public bracket viewing
-    Route::get('/tournaments/{tournament}/matches', [MatchController::class, 'index']); // Public matches viewing
-    
-    // Games list (optionnel)
-    Route::get('/games', [TournamentController::class, 'games']);
-    Route::get('/stats', [TournamentController::class, 'globalStats']);
+    Route::get('/tournaments/{tournament}/bracket', [BracketController::class, 'show']);
+    Route::get('/tournaments/{tournament}/matches', [MatchController::class, 'index']);
 });
 
 // ==================== PROTECTED ROUTES ====================
@@ -39,7 +35,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // User profile
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::put('/profile', [AuthController::class, 'updateProfile']);
     
     // ========== TOURNAMENT MANAGEMENT ==========
     // Organizer only
@@ -94,6 +89,4 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // ========== SEARCH & FILTERS ==========
     Route::get('/search/tournaments', [TournamentController::class, 'search']);
     Route::get('/search/players', [TournamentController::class, 'searchPlayers']);
-    
-    
 });

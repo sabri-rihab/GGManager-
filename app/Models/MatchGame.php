@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Events\MatchUpdated; 
-use App\Events\TournamentFinished;
 
 class MatchGame extends Model
 {
     use HasFactory;
+
+    protected $table = 'match_games';
 
     protected $fillable = [
         'tournament_id',
@@ -67,18 +67,12 @@ class MatchGame extends Model
         
         $winnerId = $scoreP1 > $scoreP2 ? $this->player1_id : $this->player2_id;
         $this->winner_id = $winnerId;
-        
         $this->save();
         
-        // Broadcast the update
-        broadcast(new MatchUpdated($this))->toOthers();
-        
-        // Update next match if exists
         if ($this->next_match_id && $winnerId) {
             $this->updateNextMatch($winnerId);
         }
         
-        // Check if tournament is finished
         $this->checkTournamentCompletion();
         
         return $this;
@@ -88,17 +82,12 @@ class MatchGame extends Model
     {
         $nextMatch = $this->nextMatch;
         
-        if ($nextMatch->player1_id === $this->id) {
-            $nextMatch->player1_id = $winnerId;
-        } elseif ($nextMatch->player2_id === $this->id) {
-            $nextMatch->player2_id = $winnerId;
-        }
-        
-        $nextMatch->save();
-        
-        // If both players are set and it's a bye match, auto-complete
-        if ($nextMatch->player1_id && $nextMatch->player2_id && $nextMatch->is_bye) {
-            $nextMatch->is_bye = false;
+        if ($nextMatch) {
+            if (is_null($nextMatch->player1_id)) {
+                $nextMatch->player1_id = $winnerId;
+            } elseif (is_null($nextMatch->player2_id)) {
+                $nextMatch->player2_id = $winnerId;
+            }
             $nextMatch->save();
         }
     }
@@ -106,15 +95,11 @@ class MatchGame extends Model
     protected function checkTournamentCompletion()
     {
         $tournament = $this->tournament;
-        
-        // Check if there's a final match (highest round)
         $maxRound = $tournament->matches()->max('round');
         
         if ($this->round === $maxRound && $this->winner_id) {
             $tournament->status = 'finish';
             $tournament->save();
-            
-            broadcast(new TournamentFinished($tournament))->toOthers();
         }
     }
 }

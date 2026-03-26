@@ -1,36 +1,29 @@
 <?php
 
-namespace App\Services;
+namespace App\Providers;
 
 use App\Models\Tournament;
 use App\Models\MatchGame;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BracketGenerator
 {
     public function generate(Tournament $tournament)
     {
         DB::transaction(function () use ($tournament) {
-            // Get participants
             $participants = $tournament->participants()->pluck('user_id')->toArray();
-            
-            // Shuffle participants
             shuffle($participants);
             
-            // Calculate bracket size (next power of 2)
             $numParticipants = count($participants);
             $bracketSize = pow(2, ceil(log($numParticipants, 2)));
             $numByes = $bracketSize - $numParticipants;
             
-            // Generate first round matches
+            // Créer les matchs du premier round
             $firstRoundMatches = $this->createFirstRound($tournament, $participants, $numByes);
             
-            // Generate subsequent rounds
+            // Créer les rounds suivants
             $this->createSubsequentRounds($tournament, $firstRoundMatches);
-            
-            // Update tournament status
-            $tournament->status = 'close';
-            $tournament->save();
         });
         
         return true;
@@ -39,19 +32,11 @@ class BracketGenerator
     private function createFirstRound($tournament, $participants, $numByes)
     {
         $matches = [];
-        $matchIndex = 0;
-        $participantIndex = 0;
-        
-        // Calculate number of matches in first round
-        $totalMatches = count($participants) / 2;
+        $totalMatches = ceil(count($participants) / 2);
         
         for ($i = 0; $i < $totalMatches; $i++) {
-            $player1 = $participants[$participantIndex] ?? null;
-            $participantIndex++;
-            $player2 = $participants[$participantIndex] ?? null;
-            $participantIndex++;
-            
-            $isBye = is_null($player2);
+            $player1 = $participants[$i * 2] ?? null;
+            $player2 = $participants[$i * 2 + 1] ?? null;
             
             $match = MatchGame::create([
                 'tournament_id' => $tournament->id,
@@ -59,11 +44,10 @@ class BracketGenerator
                 'player2_id' => $player2,
                 'round' => 1,
                 'position' => $i,
-                'is_bye' => $isBye,
+                'is_bye' => is_null($player2),
             ]);
             
-            // If bye, auto-advance player
-            if ($isBye && $player1) {
+            if (is_null($player2) && $player1) {
                 $match->winner_id = $player1;
                 $match->save();
             }
@@ -84,7 +68,6 @@ class BracketGenerator
             $numMatches = count($currentMatches) / 2;
             
             for ($i = 0; $i < $numMatches; $i++) {
-                // Create next round match
                 $nextMatch = MatchGame::create([
                     'tournament_id' => $tournament->id,
                     'round' => $round,
@@ -92,7 +75,6 @@ class BracketGenerator
                     'is_bye' => false,
                 ]);
                 
-                // Link current matches to next match
                 $leftMatch = $currentMatches[$i * 2];
                 $rightMatch = $currentMatches[$i * 2 + 1] ?? null;
                 

@@ -9,6 +9,9 @@ class Tournament extends Model
 {
     use HasFactory;
 
+   
+    protected $table = 'tournaments';
+
     protected $fillable = [
         'name',
         'game',
@@ -33,9 +36,10 @@ class Tournament extends Model
                     ->withTimestamps();
     }
 
+   
     public function matches()
     {
-        return $this->hasMany(MatchGame::class);
+        return $this->hasMany(MatchGame::class, 'tournament_id');
     }
 
     public function canRegister()

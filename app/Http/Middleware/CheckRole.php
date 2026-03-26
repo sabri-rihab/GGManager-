@@ -15,7 +15,7 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Vérifier si l'utilisateur est authentifié via Sanctum
+        
         $user = $request->user();
         
         if (!$user) {

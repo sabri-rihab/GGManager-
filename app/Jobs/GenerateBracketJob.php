@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Tournament;
-use App\Services\BracketGenerator;
+use App\Providers\BracketGenerator;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
